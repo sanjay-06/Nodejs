@@ -1,52 +1,86 @@
 const express =require('express');
 const bodyParser=require('body-parser');
+const mongoose =require('mongoose');
 
-const promoRouter=express.Router();
+const promotions =require('../modals/promotions');
 
-promoRouter.use(bodyParser.json());
+const promotionRouter=express.Router();
 
-promoRouter.route('/')
+promotionRouter.use(bodyParser.json());
 
-.all((req,res,next) => {
-    res.statusCode=200;
-    res.setHeader('Content-Type','text/plain');
-    next();
-})
-
+promotionRouter.route('/')
 .get((req,res,next)=>{
-    res.end('Will send all the promotions to you!');
+    promotions.find({})
+    .then((promotions)=>{
+        res.statusCode=200;
+        res.setHeader('Content-Type','application/json');
+        res.json(promotions);
+    },(err)=>next(err))
+    .catch((err)=>next(err));
 })
-
 .post((req,res,next)=>{
-    res.end('Will add the promotion: '+ req.body.name +' With details '+req.body.description);
+    promotions.create(req.body)
+    .then((promotions)=>{
+        console.log('Promotion Created ',promotions);
+        res.statusCode=200;
+        res.setHeader('Content-Type','application/json');
+        res.json(promotions);
+    },(err)=>next(err))
+    .catch((err)=>next(err));
 })
-
 .put((req,res,next)=>{
     res.statusCode=403;
     res.end('PUT operation not supported on /promotions');
 })
 .delete((req,res,next)=>{
-    res.end('Deleting all the promotions');
+    promotions.remove({})
+    .then((resp)=>{
+        res.statusCode=200;
+        res.setHeader('Content-Type','application/json');
+        res.json(resp);
+    },(err)=>next(err))
+    .catch((err)=>next(err));
 }); 
 
-promoRouter.route('/:promoId')
+promotionRouter.route('/:promotionId')
 
 .get((req,res,next)=>{
-    res.end('Will send details of promotion: '+req.params.promoId+' to you!');
+    promotions.findById(req.params.promotionId)
+    .then((promotions)=>{
+        console.log('Promotion Created ',promotions);
+        res.statusCode=200;
+        res.setHeader('Content-Type','application/json');
+        res.json(promotions);
+    },(err)=>next(err))
+    .catch((err)=>next(err));
 })
 
 .post((req,res,next)=>{
     res.statusCode=403;
-    res.end('POST operation not supported on /promotions/'+ req.params.promoId);
+    res.end('POST operation not supported on /promotions/'+ req.params.promotionId);
 })
 
 .put((req,res,next)=>{
-    res.write('Updating the promotion: '+req.params.promoId);
-    res.end('\n'+'Will update the promotion: '+req.body.name +' With details: '+req.body.description);
+   promotions.findByIdAndUpdate(req.params.promotionId,{
+       $set: req.body
+   },{new: true})
+   .then((promotions)=>{
+    console.log('Promotion Created ',promotions);
+    res.statusCode=200;
+    res.setHeader('Content-Type','application/json');
+    res.json(promotions);
+    },(err)=>next(err))
+    .catch((err)=>next(err));
 })
 
 .delete((req,res,next)=>{
-    res.end('Deleting promotion: ' +req.params.promoId);
+   promotions.findByIdAndRemove(req.params.promotionId)
+   .then((resp)=>{
+    res.statusCode=200;
+    res.setHeader('Content-Type','application/json');
+    res.json(resp);
+    },(err)=>next(err))
+    .catch((err)=>next(err));
 }); 
 
-module.exports=promoRouter;
+module.exports=promotionRouter;
